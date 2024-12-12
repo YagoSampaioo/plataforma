@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LogIn, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import logo from '../assets/logo.ico';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -31,7 +32,7 @@ export function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="flex justify-center">
-            <LogIn className="h-12 w-12 text-ffb400" />
+            <img src={logo} alt="Logo" className="h-24 w-auto" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold text-ffb400">
             Acesse sua conta
