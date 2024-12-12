@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Loader2, AlertCircle } from 'lucide-react';
-import logo from '../assets/logo.ico';
+import logo from '../assets/';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
