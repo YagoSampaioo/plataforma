@@ -5,6 +5,8 @@ import { saleService } from '../../services/saleService';
 import { CreateSaleInput } from '../../types/sale';
 import { Send, AlertCircle } from 'lucide-react';
 import { BackButton } from '../navigation/BackButton';
+import { SdrSelect } from './form/SdrSelect';
+import { CloserSelect } from './form/CloserSelect';
 
 export function SalesForm() {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ export function SalesForm() {
     client_name: '',
     client_phone: '',
     sdr_id: '',
+    closer_id: '',
     plan: 'silver' as const,
     isFee: false,
     value: '',
@@ -28,7 +31,16 @@ export function SalesForm() {
     const fetchSalesTeam = async () => {
       try {
         const team = await saleService.getSalesTeam();
-        setSalesTeam(team.filter(member => member.role === 'sdr'));
+        setSalesTeam(team);
+        
+        // If user is a closer or SDR, pre-select their ID
+        if (user) {
+          if (user.role === 'closer') {
+            setFormData(prev => ({ ...prev, closer_id: user.id }));
+          } else if (user.role === 'sdr') {
+            setFormData(prev => ({ ...prev, sdr_id: user.id }));
+          }
+        }
       } catch (err) {
         console.error('Error fetching sales team:', err);
         setError('Erro ao carregar equipe comercial');
@@ -36,7 +48,7 @@ export function SalesForm() {
     };
 
     fetchSalesTeam();
-  }, []);
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,13 +60,15 @@ export function SalesForm() {
 
     try {
       const selectedSDR = salesTeam.find(member => member.id === formData.sdr_id);
-      if (!selectedSDR) {
-        throw new Error('SDR não selecionado');
+      const selectedCloser = salesTeam.find(member => member.id === formData.closer_id);
+      
+      if (!selectedSDR || !selectedCloser) {
+        throw new Error('Selecione um SDR e um closer');
       }
 
       const saleData: CreateSaleInput = {
-        seller_id: user.id,
-        seller_name: user.name,
+        seller_id: selectedCloser.id,
+        seller_name: selectedCloser.name,
         sdr_id: selectedSDR.id,
         sdr_name: selectedSDR.name,
         client_name: formData.client_name,
@@ -127,22 +141,34 @@ export function SalesForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    SDR
+                    Método de Pagamento
                   </label>
                   <select
                     required
                     className="w-full bg-dark-300/50 border border-ffb400/10 rounded-md px-3 py-2 text-white focus:ring-ffb400 focus:border-ffb400"
-                    value={formData.sdr_id}
-                    onChange={(e) => setFormData({ ...formData, sdr_id: e.target.value })}
+                    value={formData.payment_method}
+                    onChange={(e) => setFormData({ ...formData, payment_method: e.target.value as CreateSaleInput['payment_method'] })}
                   >
-                    <option value="">Selecione um SDR</option>
-                    {salesTeam.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name}
-                      </option>
-                    ))}
+                    <option value="credit_card">Cartão de Crédito</option>
+                    <option value="pix">PIX</option>
+                    <option value="bank_transfer">Transferência Bancária</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <SdrSelect
+                  sdrId={formData.sdr_id}
+                  onSdrChange={(id) => setFormData({ ...formData, sdr_id: id })}
+                  salesTeam={salesTeam}
+                  disabled={user.role === 'sdr'}
+                />
+                <CloserSelect
+                  closerId={formData.closer_id}
+                  onCloserChange={(id) => setFormData({ ...formData, closer_id: id })}
+                  salesTeam={salesTeam}
+                  disabled={user.role === 'closer'}
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -176,34 +202,18 @@ export function SalesForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Método de Pagamento
+                    Valor
                   </label>
-                  <select
+                  <input
+                    type="number"
                     required
-                    className="w-full bg-dark-300/50 border border-ffb400/10 rounded-md px-3 py-2 text-white focus:ring-ffb400 focus:border-ffb400"
-                    value={formData.payment_method}
-                    onChange={(e) => setFormData({ ...formData, payment_method: e.target.value as CreateSaleInput['payment_method'] })}
-                  >
-                    <option value="credit_card">Cartão de Crédito</option>
-                    <option value="pix">PIX</option>
-                    <option value="bank_transfer">Transferência Bancária</option>
-                  </select>
+                    step="0.01"
+                    min="0"
+                    className="w-full bg-dark-300/50 border border-ffb400/10 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:ring-ffb400 focus:border-ffb400"
+                    value={formData.value}
+                    onChange={(e) => setFormData({ ...formData, value: e.target.value })}
+                  />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Valor
-                </label>
-                <input
-                  type="number"
-                  required
-                  step="0.01"
-                  min="0"
-                  className="w-full bg-dark-300/50 border border-ffb400/10 rounded-md px-3 py-2 text-white placeholder-gray-500 focus:ring-ffb400 focus:border-ffb400"
-                  value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                />
               </div>
 
               <div>
