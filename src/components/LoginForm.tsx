@@ -35,7 +35,7 @@ export function LoginForm() {
             <img src={logo} alt="Logo" className="h-24 w-auto" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold text-ffb400">
-            Acesse sua conta
+          Platform Alpha
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
