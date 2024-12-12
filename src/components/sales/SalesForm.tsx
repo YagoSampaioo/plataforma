@@ -16,7 +16,7 @@ export function SalesForm() {
   const [formData, setFormData] = useState({
     client_name: '',
     client_phone: '',
-    sdr_id: '',
+    closer_id: '',
     plan: 'silver' as const,
     isFee: false,
     value: '',
@@ -28,7 +28,8 @@ export function SalesForm() {
     const fetchSalesTeam = async () => {
       try {
         const team = await saleService.getSalesTeam();
-        setSalesTeam(team.filter(member => member.role === 'sdr'));
+        // Filter to show only closers
+        setSalesTeam(team.filter(member => member.role === 'closer'));
       } catch (err) {
         console.error('Error fetching sales team:', err);
         setError('Erro ao carregar equipe comercial');
@@ -47,16 +48,16 @@ export function SalesForm() {
     setError(null);
 
     try {
-      const selectedSDR = salesTeam.find(member => member.id === formData.sdr_id);
-      if (!selectedSDR) {
-        throw new Error('SDR não selecionado');
+      const selectedCloser = salesTeam.find(member => member.id === formData.closer_id);
+      if (!selectedCloser) {
+        throw new Error('Closer não selecionado');
       }
 
       const saleData: CreateSaleInput = {
-        seller_id: user.id,
-        seller_name: user.name,
-        sdr_id: selectedSDR.id,
-        sdr_name: selectedSDR.name,
+        seller_id: selectedCloser.id, // Closer is now the seller
+        seller_name: selectedCloser.name,
+        sdr_id: user.id, // Current user (SDR) is the SDR
+        sdr_name: user.name,
         client_name: formData.client_name,
         client_phone: formData.client_phone,
         plan: formData.isFee ? 'fee' : formData.plan,
@@ -127,15 +128,15 @@ export function SalesForm() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    SDR
+                    Closer
                   </label>
                   <select
                     required
                     className="w-full bg-dark-300/50 border border-ffb400/10 rounded-md px-3 py-2 text-white focus:ring-ffb400 focus:border-ffb400"
-                    value={formData.sdr_id}
-                    onChange={(e) => setFormData({ ...formData, sdr_id: e.target.value })}
+                    value={formData.closer_id}
+                    onChange={(e) => setFormData({ ...formData, closer_id: e.target.value })}
                   >
-                    <option value="">Selecione um SDR</option>
+                    <option value="">Selecione um Closer</option>
                     {salesTeam.map((member) => (
                       <option key={member.id} value={member.id}>
                         {member.name}
